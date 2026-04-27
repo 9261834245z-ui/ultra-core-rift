@@ -11,18 +11,15 @@ UltraCore Rift is a **deterministic economic engine** built on the **Stable Inva
 
 It enforces a single unbreakable mathematical invariant after **every** operation:
 
-```math
-total_supply = total_base_sum + global_field × p
-All state transitions are protected by strict checked arithmetic and on-chain check_invariant() verification.
-Key Features
+$$total\_supply = total\_base\_sum + global\_field \times p$$
 
-Unbreakable Invariant — verified on-chain after every instruction
-Negative Entropy — applies NEG_E (≈ -e × 10¹⁸) to compress the global field
-Edge-weighted Transfers — P2P transfers with dynamic mint/burn via directed edges
-Proportional Debt Limit — -total_supply / (p × 10)
-Safe "The Great Exit" — graceful participant removal even when p → 0
-Perfect Conservation — redistribution with dust accumulator + full mint/burn accounting
+All state transitions are protected by strict checked arithmetic and on-chain `check_invariant()` verification.
 
+### Key Features
+
+* **Unbreakable Invariant** — verified on-chain after every instruction
+* **Negative Entropy** — applies NEG_E (≈ -e × 10¹⁸) to compress the global field
+* **Edge-weighted Transfers** — P2P transfers with dynamic mint/burn via directed edges
 Technical Validation
 
 10/10 Fuzz Testing: 3000+ deterministic iterations + "Ultimate Stress" scenario (extreme negative entropy + debt + malicious exits)
