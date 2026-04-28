@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UltraCore Rift | SIRM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .math { font-family: monospace; }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-200">
+  <div class="max-w-5xl mx-auto px-6 py-12">
+
+    <!-- Header -->
+    <div class="text-center mb-16">
+      <h1 class="text-5xl font-bold mb-3">UltraCore Rift</h1>
+      <p class="text-2xl text-emerald-400">Stable Invariant Rift Model (SIRM)</p>
+      <p class="mt-4 text-zinc-400 max-w-2xl mx-auto">
+        A mathematically guaranteed economic state machine on Solana.
+      </p>
+    </div>
+
+    <!-- Core Invariant -->
+    <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-8 mb-12">
+      <h2 class="text-xl font-semibold mb-4 flex items-center gap-3">
+        <i class="fas fa-shield-alt text-emerald-500"></i>
+        Core Mathematical Invariant
+      </h2>
+      <div class="math bg-black p-6 rounded-xl text-center text-2xl font-mono text-emerald-300">
+        total_supply = total_base_sum + global_field × p
+      </div>
+      <p class="text-center mt-4 text-zinc-400">
+        This invariant is <strong>verified on-chain after every single operation</strong>.
+      </p>
+    </div>
+
+    <!-- Key Features -->
+    <div class="grid md:grid-cols-3 gap-6 mb-16">
+      <div class="bg-zinc-900 p-6 rounded-2xl border border-zinc-700">
+        <h3 class="font-semibold text-lg mb-3">Negative Entropy</h3>
+        <p class="text-zinc-400">Applies NEG_E (≈ -e × 10¹⁸) to compress the global field while preserving the invariant.</p>
+      </div>
+      <div class="bg-zinc-900 p-6 rounded-2xl border border-zinc-700">
+        <h3 class="font-semibold text-lg mb-3">Proportional Debt Limit</h3>
+        <p class="text-zinc-400">-total_supply / (p × 10). Safe debt with mathematical bounds.</p>
+      </div>
+      <div class="bg-zinc-900 p-6 rounded-2xl border border-zinc-700">
+        <h3 class="font-semibold text-lg mb-3">The Great Exit</h3>
+        <p class="text-zinc-400">Graceful participant removal even when p → 0.</p>
+      </div>
+    </div>
+
+    <!-- Fuzz Testing -->
+    <div class="bg-gradient-to-r from-emerald-900 to-teal-900 border border-emerald-700 rounded-2xl p-8 mb-12">
+      <h2 class="text-2xl font-bold mb-4">Proven Robustness</h2>
+      <p class="text-xl">
+        Passed <strong>3000+</strong> deterministic fuzz iterations with fixed seed 1337 + 
+        "Ultimate Stress" scenario (hundreds of negative entropy applications).
+      </p>
+      <p class="mt-6 text-emerald-300 font-medium">
+        Zero invariant violations observed.
+      </p>
+    </div>
+
+    <!-- Video -->
+    <div class="mb-12">
+      <h2 class="text-2xl font-semibold mb-4">Demo: Fuzz Test</h2>
+      <p class="text-zinc-400 mb-4">
+        The video below shows our deterministic fuzz test suite running at high speed, 
+        proving the mathematical stability of the system.
+      </p>
+      <div class="aspect-video bg-black rounded-xl overflow-hidden">
+        <iframe width="100%" height="100%" 
+          src="https://www.youtube.com/embed/qiD1IAPtHO8" 
+          title="UltraCore Rift Fuzz Test" 
+          frameborder="0" allowfullscreen>
+        </iframe>
+      </div>
+    </div>
+
+    <!-- Links -->
+    <div class="flex flex-wrap gap-4 justify-center">
+      <a href="https://github.com/9261834245z-ui/ultra-core-rift" 
+         target="_blank"
+         class="bg-white text-black px-8 py-4 rounded-2xl font-semibold hover:bg-zinc-200 transition">
+        View on GitHub
+      </a>
+      <a href="SPEC.md" class="border border-zinc-600 hover:border-zinc-400 px-8 py-4 rounded-2xl font-semibold transition">
+        Read SPEC.md
+      </a>
+    </div>
+
+    <div class="text-center mt-16 text-zinc-500 text-sm">
+      SIRM Master-Build • Mathematically Enforced Economic Integrity on Solana
+    </div>
+  </div>
+</body>
+</html>
