@@ -1,4 +1,3 @@
-// programs/rift-token/src/lib.rs
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount};
 use ultra_core_rift::program::UltraCoreRift;
@@ -6,25 +5,39 @@ use ultra_core_rift::{CoreState, RiftError};
 
 declare_id!("RiftToken111111111111111111111111111111111");
 
+pub const FOUNDER_SHARE_BPS: u16 = 314;
+pub const MAX_FEE_BPS: u16 = 10;
+
+#[error_code]
+pub enum TokenError {
+    #[msg("Fee exceeds maximum protocol limits.")]
+    FeeTooHigh,
+    #[msg("Invalid admin vault address.")]
+    InvalidAdminVault,
+}
+
 #[program]
 pub mod rift_token {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>, decimals: u8, fee_bps: u16, initial_supply: u64) -> Result<()> {
-        require!(fee_bps <= MAX_FEE_BPS, RiftError::InvalidFee);
+    pub fn initialize(
+        ctx: Context<Initialize>,
+        decimals: u8,
+        fee_bps: u16,
+        initial_supply: u64,
+    ) -> Result<()> {
+        require!(fee_bps <= MAX_FEE_BPS, TokenError::FeeTooHigh);
 
         let state = &mut ctx.accounts.rift_token_state;
-
         state.authority = ctx.accounts.gate.key();
         state.core_state = ctx.accounts.core_state.key();
         state.admin_vault = ctx.accounts.admin_vault.key();
         state.decimals = decimals;
         state.fee_bps = fee_bps;
         state.total_shares = 0;
-        state.rift_multiplier = 1_000_000_000_000_000u128; // 10^15 precision
-        state.bump = *ctx.bumps.get("rift_token_state").unwrap();
+        state.rift_multiplier = 1_000_000_000_000_000u128;
+        state.bump = ctx.bumps.rift_token_state;
 
-        // ===================== GENESIS ALLOCATION (Pi Share) =====================
         let founder_share = (initial_supply as u128)
             .checked_mul(FOUNDER_SHARE_BPS as u128)
             .ok_or(RiftError::MathOverflow)?
@@ -32,13 +45,21 @@ pub mod rift_token {
             .unwrap_or(0) as u64;
 
         if founder_share > 0 {
+            let auth_bump = ctx.bumps.rift_authority;
+            let signer_seeds: &[&[&[u8]]] = &[&[b"rift_mint_authority", &[auth_bump]]];
+
             let cpi_accounts = token::MintTo {
                 mint: ctx.accounts.rift_mint.to_account_info(),
                 to: ctx.accounts.admin_vault_token_account.to_account_info(),
                 authority: ctx.accounts.rift_authority.to_account_info(),
             };
 
-            let cpi_ctx = CpiContext::new(ctx.accounts.token_program.to_account_info(), cpi_accounts);
+            let cpi_ctx = CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                cpi_accounts,
+                signer_seeds,
+            );
+
             token::mint_to(cpi_ctx, founder_share)?;
 
             state.total_shares = state.total_shares
@@ -51,13 +72,10 @@ pub mod rift_token {
 
     pub fn issue_rift(ctx: Context<IssueRift>, base_amount: u64) -> Result<()> {
         let core = &ctx.accounts.core_state;
-
-        // Critical: Core invariant must hold
         core.check_invariant()?;
 
         let state = &ctx.accounts.rift_token_state;
 
-        // Calculate protocol fee (max 0.1%)
         let fee_amount = (base_amount as u128)
             .checked_mul(state.fee_bps as u128)
             .ok_or(RiftError::MathOverflow)?
@@ -68,12 +86,11 @@ pub mod rift_token {
             .checked_sub(fee_amount)
             .ok_or(RiftError::MathOverflow)?;
 
-        // Transfer fee in native SOL to admin_vault
         anchor_lang::solana_program::program::invoke(
             &anchor_lang::solana_program::system_instruction::transfer(
                 &ctx.accounts.user.key(),
                 &ctx.accounts.admin_vault.key(),
-                fee_amount as u64,
+                fee_amount,
             ),
             &[
                 ctx.accounts.user.to_account_info(),
@@ -82,13 +99,8 @@ pub mod rift_token {
             ],
         )?;
 
-        // Field pressure ratio (Negative Entropy increases RIFT value)
-        let field_pressure = if core.global_field <= 0 {
-            (-core.global_field) as u128
-        } else {
-            core.global_field as u128
-        };
-        let field_pressure = field_pressure.max(1);
+        // Safe math: unsigned_abs to prevent panic on i128::MIN
+        let field_pressure = core.global_field.unsigned_abs().max(1) as u128;
 
         let mint_multiplier = 1_000_000_000_000_000u128
             .checked_div(field_pressure)
@@ -100,14 +112,21 @@ pub mod rift_token {
             .checked_div(1_000_000_000_000u128)
             .unwrap_or(0) as u64;
 
-        // Mint shares to user
+        let auth_bump = ctx.bumps.rift_authority;
+        let signer_seeds: &[&[&[u8]]] = &[&[b"rift_mint_authority", &[auth_bump]]];
+
         let cpi_accounts = token::MintTo {
             mint: ctx.accounts.rift_mint.to_account_info(),
             to: ctx.accounts.user_token_account.to_account_info(),
             authority: ctx.accounts.rift_authority.to_account_info(),
         };
 
-        let cpi_ctx = CpiContext::new(ctx.accounts.token_program.to_account_info(), cpi_accounts);
+        let cpi_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            cpi_accounts,
+            signer_seeds,
+        );
+
         token::mint_to(cpi_ctx, shares_to_mint)?;
 
         state.total_shares = state.total_shares
@@ -132,15 +151,11 @@ pub mod rift_token {
 
         core.check_invariant()?;
 
-        let new_multiplier = if core.global_field <= 0 {
-            1_000_000_000_000_000u128
-                .checked_div((-core.global_field) as u128)
-                .unwrap_or(1_000_000_000_000u128)
-        } else {
-            1_000_000_000_000u128
-                .checked_div(core.global_field as u128)
-                .unwrap_or(1_000_000_000_000u128)
-        };
+        let field_pressure = core.global_field.unsigned_abs().max(1) as u128;
+
+        let new_multiplier = 1_000_000_000_000_000u128
+            .checked_div(field_pressure)
+            .unwrap_or(1_000_000_000_000u128);
 
         let old_multiplier = state.rift_multiplier;
         state.rift_multiplier = new_multiplier;
@@ -153,41 +168,7 @@ pub mod rift_token {
 
         Ok(())
     }
-
-    pub fn withdraw_revenue(ctx: Context<WithdrawRevenue>, amount: u64) -> Result<()> {
-        require_keys_eq!(
-            ctx.accounts.rift_token_state.authority,
-            ctx.accounts.authority.key(),
-            RiftError::Unauthorized
-        );
-
-        anchor_lang::solana_program::program::invoke_signed(
-            &anchor_lang::solana_program::system_instruction::transfer(
-                &ctx.accounts.program_vault.key(),
-                &ctx.accounts.admin_vault.key(),
-                amount,
-            ),
-            &[
-                ctx.accounts.program_vault.to_account_info(),
-                ctx.accounts.admin_vault.to_account_info(),
-                ctx.accounts.system_program.to_account_info(),
-            ],
-            &[&[b"rift_vault", &[ctx.accounts.rift_token_state.bump]]],
-        )?;
-
-        emit!(RevenueWithdrawnEvent {
-            authority: ctx.accounts.authority.key(),
-            amount,
-        });
-
-        Ok(())
-    }
 }
-
-// ========================== CONSTANTS ==========================
-
-pub const FOUNDER_SHARE_BPS: u16 = 314;   // 3.14%
-pub const MAX_FEE_BPS: u16 = 10;         // 0.1%
 
 // ========================== STATE ==========================
 
@@ -211,19 +192,24 @@ pub struct Initialize<'info> {
     pub rift_token_state: Account<'info, RiftTokenState>,
 
     #[account(mut)]
-    pub core_state: Account<'info, ultra_core_rift::CoreState>,
+    pub core_state: Account<'info, CoreState>,
 
     #[account(mut)]
     pub rift_mint: Account<'info, Mint>,
 
+    #[account(mut)]
     pub admin_vault_token_account: Account<'info, TokenAccount>,
 
+    /// CHECK: Admin vault that receives genesis share and protocol fees. Set by gate authority during initialization.
     pub admin_vault: UncheckedAccount<'info>,
 
+    /// CHECK: PDA used as mint authority for RIFT tokens.
     #[account(seeds = [b"rift_mint_authority"], bump)]
     pub rift_authority: UncheckedAccount<'info>,
 
+    #[account(mut)]
     pub gate: Signer<'info>,
+
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
 }
@@ -233,7 +219,7 @@ pub struct IssueRift<'info> {
     #[account(mut)]
     pub rift_token_state: Account<'info, RiftTokenState>,
 
-    pub core_state: Account<'info, ultra_core_rift::CoreState>,
+    pub core_state: Account<'info, CoreState>,
 
     #[account(mut)]
     pub rift_mint: Account<'info, Mint>,
@@ -241,12 +227,17 @@ pub struct IssueRift<'info> {
     #[account(mut)]
     pub user_token_account: Account<'info, TokenAccount>,
 
+    /// CHECK: PDA mint authority. Signed via seeds in CPI.
     #[account(seeds = [b"rift_mint_authority"], bump)]
     pub rift_authority: UncheckedAccount<'info>,
 
-    pub user: Signer<'info>,
     #[account(mut)]
+    pub user: Signer<'info>,
+
+    /// CHECK: Receives protocol fees in SOL. Constrained to match stored admin_vault.
+    #[account(mut, constraint = admin_vault.key() == rift_token_state.admin_vault @ TokenError::InvalidAdminVault)]
     pub admin_vault: UncheckedAccount<'info>,
+
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
 }
@@ -255,19 +246,8 @@ pub struct IssueRift<'info> {
 pub struct Rebase<'info> {
     #[account(mut)]
     pub rift_token_state: Account<'info, RiftTokenState>,
-    pub core_state: Account<'info, ultra_core_rift::CoreState>,
+    pub core_state: Account<'info, CoreState>,
     pub gate: Signer<'info>,
-}
-
-#[derive(Accounts)]
-pub struct WithdrawRevenue<'info> {
-    pub rift_token_state: Account<'info, RiftTokenState>,
-    pub authority: Signer<'info>,
-    #[account(mut)]
-    pub program_vault: UncheckedAccount<'info>,
-    #[account(mut)]
-    pub admin_vault: UncheckedAccount<'info>,
-    pub system_program: Program<'info, System>,
 }
 
 // ========================== EVENTS ==========================
@@ -287,10 +267,4 @@ pub struct RiftRebaseEvent {
     pub old_multiplier: u128,
     pub new_multiplier: u128,
     pub global_field: i128,
-}
-
-#[event]
-pub struct RevenueWithdrawnEvent {
-    pub authority: Pubkey,
-    pub amount: u64,
 }
