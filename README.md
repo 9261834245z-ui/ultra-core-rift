@@ -44,3 +44,7 @@ cat SPEC.md
 Built for DeFi builders, researchers, and anyone who wants mathematically sound economic primitives on Solana.
 
 SIRM Master-Build — Where economic integrity is not assumed, but mathematically enforced.
+---
+## 🛡️ Formal Verification
+The core logic of this protocol is mathematically proven for stability and value conservation. 
+Detailed proofs: [FORMAL_VERIFICATION.md](./FORMAL_VERIFICATION.md)
