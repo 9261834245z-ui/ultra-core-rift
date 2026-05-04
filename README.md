@@ -44,6 +44,7 @@ This is economic physics on Solana.
 - **[ARCHITECTURE.md](./ARCHITECTURE.md)** — Core architecture and technical specifications
 - **[COMPARISON.md](./COMPARISON.md)** — Detailed architectural comparison
 - **[SPEC.md](./SPEC.md)** — Full mathematical specification
+- **[TOKENOMICS.md](./TOKENOMICS.md)** — Economic physics and RIFT token utility
 - **[FORMAL_VERIFICATION.md](./FORMAL_VERIFICATION.md)** — Formal proofs and verification
 - **[OPS.md](./OPS.md)** — Operations manual
 - **[SECURITY.md](./SECURITY.md)** — Security policy
