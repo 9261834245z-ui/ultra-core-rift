@@ -53,7 +53,8 @@ This is economic physics on Solana.
 ```bash
 git clone https://github.com/9261834245z-ui/ultra-core-rift.git
 cd ultra-core-rift
+```
 
-SIRM — Stable Invariant Rift Model
+--- SIRM — Stable Invariant Rift Model
 Where economic integrity is not a marketing promise.
 It is a mathematically enforced law.
