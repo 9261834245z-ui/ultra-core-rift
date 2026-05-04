@@ -15,6 +15,7 @@ User deposits are converted into base_balance. All internal operations — inclu
 
 ### 2.1 Primary Supply Invariant
 total_supply = total_base_sum + (global_field * current_p)
+
 Where:
 - total_supply — current circulating supply
 - total_base_sum — sum of all users' base_balance
@@ -25,37 +26,40 @@ This invariant is enforced by check_invariant() after every state-modifying inst
 
 ### 2.2 Conservation Invariant
 total_minted - total_burned = total_supply
-tBoth invariants serve as the fundamental safety guarantee of the protocol.
+
+Both invariants serve as the fundamental safety guarantee of the protocol.
 
 ## 3. Negative Entropy Engine
 
 Negative Entropy is the primary mechanism for active system compression and entropy control.
 
-**Constant:**
-NEG_ENTROPY_CONSTANT ≈ -e * 10^18
-**Automated Trigger**  
-apply_neg_entropy() is executed deterministically based on on-chain conditions (dust accumulation, debt pressure, or time interval).
+**Core Parameters:**
+- Automated Trigger: apply_neg_entropy() is executed deterministically based on on-chain conditions (dust accumulation, debt pressure, or time interval).
+- Hard Field Cap: global_field >= HARD_FIELD_CAP (default: -1.5 * 10^18)
 
-**Hard Field Cap**
-global_field >= HARD_FIELD_CAP (default: -1.5 * 10^18)
 The cap ensures bounded negative pressure and predictable user impact during exits.
 
 ## 4. Exit Protocol (Safe Withdrawal)
 
 Exit is the only operation that converts internal system pressure into external assets.
 
-**Proportional Share Calculation**  
+### 4.1 Proportional Share Calculation
+
 All computations use fixed-point arithmetic (int128) for determinism and precision.
+
 user_share = user.base_balance / total_base_sum
 claimable = user.base_balance + (user_share * global_field * current_p)
+
 **Equivalent form:**
 claimable = user.base_balance * (total_supply / total_base_sum)
-**Minimum Exit Ratio & Stabilization Fund**  
+
+### 4.2 Minimum Exit Ratio & Stabilization Fund
+
 To protect users from extreme negative field scenarios:
 - If the calculated claimable is below user.base_balance * MIN_EXIT_RATIO (default: 30%), it is raised to this floor.
 - The deficit is covered by the Stabilization Fund only if sufficient balance exists. No artificial supply inflation is permitted.
 
-Additional safety rules:
+**Additional safety rules:**
 - DebtOnExitNotAllowed — users with active edge debts cannot exit.
 - Dust and micro-debts are automatically swept to the Stabilization Fund.
 
@@ -126,8 +130,8 @@ void exit_protocol(UserAccount& user) {
         dust_accumulator = 0;
     }
 }
-```6.2 apply_neg_entropy
-```bool apply_neg_entropy() {
+
+bool apply_neg_entropy() {
     if (!should_apply_neg_entropy()) {
         return false;
     }
