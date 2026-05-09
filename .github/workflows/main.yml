@@ -1,0 +1,12 @@
+name: RFT-Check
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        run: rustup update stable
+      - name: Run Build
+        run: cargo build
