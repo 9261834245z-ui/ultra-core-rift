@@ -12,8 +12,7 @@ UltraCore Rift is a **closed-loop deterministic invariant engine** — a self-re
 
 At its core lies a single global invariant enforced on-chain after every operation:
 
-$$total\_supply = total\_base\_sum + (global\_field \cdot current\_p)$$
-
+total_supply = total_base_sum + (global_field * current_p)
 This is economic physics on Solana.
 
 ### Core Innovations
