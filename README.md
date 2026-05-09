@@ -41,6 +41,7 @@ This is economic physics on Solana.
 
 ## Documentation
 
+- **[WHITEPAPER.md](./WHITEPAPER.md)** — Stable Invariant Rift Model (SIRM) technical whitepaper
 - **[ARCHITECTURE.md](./ARCHITECTURE.md)** — Core architecture and technical specifications
 - **[COMPARISON.md](./COMPARISON.md)** — Detailed architectural comparison
 - **[SPEC.md](./SPEC.md)** — Full mathematical specification
