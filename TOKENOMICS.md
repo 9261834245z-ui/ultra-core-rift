@@ -6,10 +6,10 @@
 ## 1. Economic Philosophy
 
 UltraCore Rift is built as a deterministic closed-loop economic system. The protocol rejects speculative emission models and instead derives value from maintaining a strict mathematical invariant enforced on-chain after every instruction:
+The foundation of the entire system is the **Primary Supply Invariant**:
+total_supply = total_base_sum + (global_field * current_p)
 
-$$
-\text{total\_supply} = \text{total\_base\_sum} + (\text{global\_field} \times p)
-$$
+This equation is verified by `check_invariant()` after every state-modifying transaction. Any violation causes immediate reversion.
 
 All economic activity, including RIFT token issuance, is subordinated to this invariant and conservation laws. Economic expansion and holder returns emerge as mathematical consequences of entropy compression rather than from inflationary incentives.
 
