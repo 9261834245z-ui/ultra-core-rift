@@ -39,7 +39,7 @@ This is economic physics on Solana.
 | 10   | Marinade Finance        | 80         | 82                  | 83               | 81               | 81.5          |
 
 ## Documentation
-
+- **[VISION.md](./VISION.md)** — Vision and architectural philosophy (Start here if you want to understand the idea)
 - **[WHITEPAPER.md](./WHITEPAPER.md)** — Stable Invariant Rift Model (SIRM) technical whitepaper
 - **[ARCHITECTURE.md](./ARCHITECTURE.md)** — Core architecture and technical specifications
 - **[COMPARISON.md](./COMPARISON.md)** — Detailed architectural comparison
