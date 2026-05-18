@@ -1,4 +1,6 @@
-# UltraCore Rift (SIRM)
+<p align="center">
+  <img src="./rift-core-schema.jpg" alt="UltraCore Rift Architecture" width="100%">
+</p># UltraCore Rift (SIRM)
 
 **The Most Mathematically Rigorous Economic Protocol on Solana**
 
